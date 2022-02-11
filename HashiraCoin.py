@@ -96,32 +96,52 @@ class Blockchain:
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
-
+                if length > max_length and self.is_chain_valid(chain):
+                    max_length = length
+                    longest_chain = chain
+        if longest_chain:
+            self.chain = longest_chain
+            return True
+        return False
 
 # Parte 2 - Mining chain
+
+
 
 # Create web app with Flask
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
+
+# Crear dirección de nodo en el puerto 5000
+
+node_address = str(uuid4()).replace('-', '')
+
 # Create a BlockChain
 
 blockchain = Blockchain()
 
 # Minar un nuevo bloque
+
+
 @app.route('/mine_block', methods=['GET'])
+
+
 def mine_block():
     previous_block = blockchain.get_previous_block()
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
+    blockchain.add_transaction(sender= node_address, receiver= " Fausto Velasco", amount=1)
     block = blockchain.create_block(proof, previous_hash)
     response = {'message': 'Enhorabuena, has minado un nuevo bloque!',
                 'index': block['index'],
                 'timestamp': block['timestamp'],
                 'proof': block['proof'],
-                'previous_hash': block['previous_hash']}
+                'previous_hash': block['previous_hash']
+                'transactions': block['transactions']}
     return jsonify(response), 200
+
 
 # Obtener la cadena de bloques al completo
 
@@ -130,6 +150,18 @@ def mine_block():
 def get_chain():
     response = {'chain': blockchain.chain,
                 'length': len(blockchain.chain)}
+    return jsonify(response), 200
+
+# Añadir una nueva transacción a la cadena de bloques
+
+@app.route('/add_transaction', methods=['POST'])
+def add_transaction():
+    json = request.get_json()
+    transaction_keys = ['sender', 'receiver', 'amount']
+    if not all(key in json for key in transaction_keys):
+        return 'Faltan alguos elementos en la transacccion', 400
+    index = blockchain.add_transaction(json['sender'], json['receiver'], json['amount'])
+    response = {'message': f'La tarnsaccion sera añadida al bloque '{index}}
     return jsonify(response), 200
 
 
@@ -148,6 +180,36 @@ def is_valid():
     return jsonify(response), 200
 
 #Parte 3 - Descentralizar la cadena de bloques
+
+# Conectar nuevos nodos
+
+@app.route('/connect_node', methods = ['POST'])
+def connect_node():
+    json = request.get_json()
+    nodes = json.get('nodes')
+    if nodes is None:
+        return ' No hay nodos para añadir'
+    for node in nodes:
+        blockchain.add_node(node)
+    response = {'message': 'todos los nodos han sido conectados. La cadena de Hasghira coins contien ahora',
+                'total_nodes': list(blockchain.nodes)}
+    return jsonify(response), 201
+
+
+# Reemplazar la cadena por la mas larga
+
+@app.route('/replace_chain', methods=['GET'])
+
+
+def replace_chain():
+    is_chain_replaced = blockchain.replace_chain()
+    if is_chain_replaced:
+        response = {'message' : 'Los nodos tenian diferentes acdenas que ha sido reemplazada por la mas larga',
+                    'new_chain': blockchain.chain}
+    else:
+        response = {'message': 'Todo correcto. La cadena en todos los nodos ya es la mas larga',
+                    'actual_hain': blockchain.chain}
+    return jsonify(response), 200
 
 
 
