@@ -212,7 +212,6 @@ def replace_chain():
     return jsonify(response), 200
 
 
-
 # Ejecutar la app
 
 
