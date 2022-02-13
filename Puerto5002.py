@@ -132,13 +132,13 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transaction(sender=node_address, receiver=" Fausto Velasco", amount=1)
+    blockchain.add_transaction(sender= node_address, receiver= " Juan Gabirel", amount=1)
     block = blockchain.create_block(proof, previous_hash)
     response = {'message': 'Enhorabuena, has minado un nuevo bloque!',
                 'index': block['index'],
                 'timestamp': block['timestamp'],
                 'proof': block['proof'],
-                'previous_hash': block['previous_hash'],
+                'previous_hash': block['previous_hash']
                 'transactions': block['transactions']}
     return jsonify(response), 200
 
@@ -156,12 +156,12 @@ def get_chain():
 
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction():
-    jason = request.get_json()
+    json = request.get_json()
     transaction_keys = ['sender', 'receiver', 'amount']
-    if not all(key in jason for key in transaction_keys):
+    if not all(key in json for key in transaction_keys):
         return 'Faltan alguos elementos en la transacccion', 400
-    index = blockchain.add_transaction(jason['sender'], jason['receiver'], jason['amount'])
-    response = {'message': f'La transaccion sera añadida al bloque {index}'}
+    index = blockchain.add_transaction(json['sender'], json['receiver'], json['amount'])
+    response = {'message': f'La tarnsaccion sera añadida al bloque '{index}}
     return jsonify(response), 200
 
 
@@ -185,8 +185,8 @@ def is_valid():
 
 @app.route('/connect_node', methods = ['POST'])
 def connect_node():
-    jason = request.get_json()
-    nodes = jason.get('nodes')
+    json = request.get_json()
+    nodes = json.get('nodes')
     if nodes is None:
         return ' No hay nodos para añadir'
     for node in nodes:
@@ -215,7 +215,7 @@ def replace_chain():
 # Ejecutar la app
 
 
-app.run(host='0.0.0.0', port=5000)
+app.run(host='0.0.0.0', port=5002)
 
 
 
